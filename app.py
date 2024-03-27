@@ -19,7 +19,6 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-# Создаем промежуточную таблицу
 user_ticket_association = db.Table(
     'user_ticket_association',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
@@ -76,19 +75,12 @@ def logout():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # If a post request was made, find the user by
-    # filtering for the username
     if request.method == "POST":
         user = Users.query.filter_by(
             username=request.form.get("username")).first()
-        # Check if the password entered is the
-        # same as the user's password
         if user.password == request.form.get("password"):
-            # Use the login_user method to log in the user
             login_user(user)
             return redirect(url_for("home"))
-        # Redirect the user back to the home
-        # (we'll create the home route in a moment)
     return render_template("login.html")
 
 
@@ -108,7 +100,6 @@ def user_tickets(user_id):
         return "Користувач не знайден"
 
 
-# Начнем с API для пользователей
 @app.route('/api/users', methods=['GET'])
 def get_users():
     users = Users.query.all()
@@ -160,9 +151,6 @@ def delete_user(user_id):
     db.session.delete(user)
     db.session.commit()
     return jsonify({'result': True})
-
-
-# Теперь добавим API для билетов
 
 @app.route('/api/tickets', methods=['GET'])
 def get_tickets():
