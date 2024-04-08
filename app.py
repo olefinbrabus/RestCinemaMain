@@ -3,6 +3,8 @@ from flask import Flask, request, url_for, redirect, render_template, jsonify, a
 from flask_login import UserMixin, LoginManager, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 
+from queue_manager import QueueManager
+
 USER = dotenv_values().get("POSTGRES_USER")
 PASSWORD = dotenv_values().get("POSTGRES_PASSWORD")
 
@@ -18,6 +20,9 @@ db = SQLAlchemy()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+user_queue_manager = QueueManager('user_queue')
+ticket_queue_manager = QueueManager('ticket_queue')
 
 user_ticket_association = db.Table(
     'user_ticket_association',
@@ -116,7 +121,7 @@ def get_user(user_id):
 
 @app.route('/api/users', methods=['POST'])
 def create_user():
-    if not request.json or not 'username' in request.json or not 'password' in request.json:
+    if not request.json or 'username' not in request.json or 'password' not in request.json:
         abort(400)
     username = request.json['username']
     password = request.json['password']
@@ -125,6 +130,7 @@ def create_user():
     user.password = password
     db.session.add(user)
     db.session.commit()
+    user_queue_manager.send_message(f'User created: {username}')
     return jsonify({'user': {'id': user.id, 'username': user.username}}), 201
 
 
@@ -182,6 +188,7 @@ def create_ticket():
         user.tickets.append(ticket)
         db.session.add(ticket)
         db.session.commit()
+        ticket_queue_manager.send_message(f'Ticket created: {title}')
         return jsonify({'ticket': {'id': ticket.id, 'title': ticket.title}}), 201
 
 

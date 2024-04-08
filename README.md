@@ -3,7 +3,7 @@
 ## Щоб локально запустити:
 ```bash
 git clone  https://github.com/olefinbrabus/RestCinemaMain
-cd ukrChatBot
+cd RestCinemaMain
 python -m venv venv
 pip install .
 ```
